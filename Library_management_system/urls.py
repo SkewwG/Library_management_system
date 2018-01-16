@@ -20,5 +20,13 @@ from Library import views
 urlpatterns = [
     url('admin/', admin.site.urls),
     url(r'^$', views.login, name='login'),
-    url(r'^onlines/', include('Library.urls'))
+    url(r'^regist/$', views.regist, name='regist'),
+    url(r'^login/$', views.login),
+    url(r'^logout/$', views.logout),
+    url(r'^index/', views.index, name='index'),
+    url(r'^personInfo/', views.personInfo),
+    url(r'^bookInfo/', views.bookInfo),
+    url(r'^borrowBook/', views.borrowBook),
+    url(r'^returnBook/', views.returnBook),
+    url(r'^index/', include('Library.urls'))
 ]

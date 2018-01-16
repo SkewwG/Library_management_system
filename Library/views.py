@@ -25,9 +25,7 @@ def regist(req):
             password = uf.cleaned_data['password']
             #添加到数据库
             User.objects.create(username= username,password=password)
-            messages.success(req, 'regist success!!')
-            return HttpResponseRedirect('/onlines/login/')
-
+            return HttpResponseRedirect('/login/')
     else:
         uf = UserForm()
     return render(req, 'regist.html',{'uf':uf})
@@ -44,7 +42,7 @@ def login(req):
             user = User.objects.filter(username__exact = username,password__exact = password)
             if user:
                 #比较成功，跳转index
-                response = HttpResponseRedirect('/onlines/index/')
+                response = HttpResponseRedirect('/../index/')
                 #将username写入浏览器cookie,失效时间为3600
                 response.set_cookie('username',username,3600)
                 return response
@@ -63,18 +61,10 @@ def login(req):
 #登陆成功
 def index(req):
     username = req.COOKIES.get('username','')
-    down_num = User.objects.get(username=username).down_num
-    had_down_num = User.objects.get(username=username).had_down_num
-    jurisdiction = User.objects.get(username=username).jurisdiction
-    if jurisdiction == 'wotu':
-        jurisdiction = '我图网'
-    elif jurisdiction == 'csdn':
-        jurisdiction = 'CSDN'
 
-    ctx = {'username': username,
-           'down_num': down_num,
-           'had_down_num': had_down_num,
-           'jurisdiction': jurisdiction}
+    ctx = {}
+    ctx['username'] = username
+
     return render(req, 'index.html', ctx)
 
 #退出
@@ -83,6 +73,49 @@ def logout(req):
     #清理cookie里保存username
     response.delete_cookie('username')
     return HttpResponseRedirect('/')
+
+# personInfo    个人信息
+def personInfo(req):
+    username = req.COOKIES.get('username','')
+    userObejct = User.objects.get(username=username)
+    readerName = userObejct.readerName
+    telphone = userObejct.telphone
+    email = userObejct.email
+    ctx = {}
+    ctx['username'] = username
+    ctx['readerName'] = readerName
+    ctx['telphone'] = telphone
+    ctx['email'] = email
+
+    return render(req, 'personInfo.html', ctx)
+
+# bookInfo    图书信息
+def bookInfo(req):
+    username = req.COOKIES.get('username','')
+
+    ctx = {}
+    ctx['username'] = username
+
+    return render(req, 'bookInfo.html', ctx)
+
+# borrowBook    借书
+def borrowBook(req):
+    username = req.COOKIES.get('username','')
+
+    ctx = {}
+    ctx['username'] = username
+
+    return render(req, 'borrowBook.html', ctx)
+
+# returnBook    还书
+def returnBook(req):
+    username = req.COOKIES.get('username','')
+
+    ctx = {}
+    ctx['username'] = username
+
+    return render(req, 'returnBook.html', ctx)
+
 
 
 
@@ -129,8 +162,6 @@ def judge_num(down_num, had_down_num):
         return True
     else:
         return False
-
-
 
 # 下载
 def down(url1, jurisdiction):

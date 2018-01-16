@@ -5,10 +5,10 @@ from django.db import models
 class User(models.Model):
     username = models.CharField(max_length=50, verbose_name='用户名')
     password = models.CharField(max_length=50, verbose_name='密码')
-    readName = models.CharField(max_length=50, verbose_name='读者名')
-    borrowedNum = models.IntegerField(verbose_name='可借阅书籍数量')
-    telphone = models.CharField(max_length=50, verbose_name='手机号')
-    email = models.CharField(max_length=50, verbose_name='邮箱')
+    readerName = models.CharField(max_length=50, verbose_name='读者名', null=True)
+    borrowedNum = models.IntegerField(verbose_name='可借阅书籍数量', null=True)
+    telphone = models.CharField(max_length=50, verbose_name='手机号', null=True)
+    email = models.CharField(max_length=50, verbose_name='邮箱', null=True)
 
     def __unicode__(self):
         return self.username
@@ -37,14 +37,14 @@ class Book(models.Model):
 # 借书表
 class BorrowBook(models.Model):
     borrowUser = models.ForeignKey(User, related_name='userBorrow', verbose_name='借书者', on_delete=models.CASCADE)
-    borrowBook = models.ForeignKey(Book, related_name='bookBorrow', verbose_name='所借书籍名字', on_delete=models.CASCADE)
+    borrowBookId = models.ForeignKey(Book, related_name='bookIdBorrow', verbose_name='书籍ID', on_delete=models.CASCADE)
     borrowData = models.DateField(auto_now_add=True, verbose_name='书籍借书时间')
     returnData = models.DateField(verbose_name='书籍归还时间')
 
 # 还书表
 class ReturnBook(models.Model):
     returnUser = models.ForeignKey(User, related_name='userReturn', verbose_name='还书者', on_delete=models.CASCADE)
-    returnBook = models.ForeignKey(Book, related_name='bookReturn', verbose_name='所还书籍名字', on_delete=models.CASCADE)
+    returnBookId = models.ForeignKey(Book, related_name='bookIdReturn', verbose_name='书籍ID', on_delete=models.CASCADE)
     returnData = models.DateField(auto_now_add=True, verbose_name='书籍归还时间')
     bookBroken = models.IntegerField(verbose_name='是否破坏')
     bookTimeout = models.IntegerField(verbose_name='是否超时')
