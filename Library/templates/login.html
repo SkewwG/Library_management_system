@@ -75,6 +75,9 @@
         <div class="block">
             <p class="block-heading">Sign In</p>
             <div class="block-body">
+                {% if error %}
+		            <p style="color: red;font-size: 20px" >Username And Password error!</p>
+                {% endif %}
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <label>Username</label>

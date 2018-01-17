@@ -14,7 +14,7 @@ class User(models.Model):
         return self.username
 
     class Meta:
-        verbose_name = '账户'
+        verbose_name = '读者'
         verbose_name_plural = verbose_name
 
     def __str__(self):
@@ -34,12 +34,29 @@ class Book(models.Model):
     isLack = models.IntegerField(verbose_name='是否缺少')
     isNew = models.IntegerField(verbose_name='是否新书')
 
+    def __unicode__(self):
+        return self.bookName
+
+    class Meta:
+        verbose_name = '书籍'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.bookName
+
 # 借书表
 class BorrowBook(models.Model):
     borrowUser = models.ForeignKey(User, related_name='userBorrow', verbose_name='借书者', on_delete=models.CASCADE)
     borrowBookId = models.ForeignKey(Book, related_name='bookIdBorrow', verbose_name='书籍ID', on_delete=models.CASCADE)
     borrowData = models.DateField(auto_now_add=True, verbose_name='书籍借书时间')
     returnData = models.DateField(verbose_name='书籍归还时间')
+
+    class Meta:
+        verbose_name = '借书表'
+        verbose_name_plural = verbose_name
+
+    def __unicode__(self):
+        return self.borrowBookId
 
 # 还书表
 class ReturnBook(models.Model):
@@ -49,8 +66,25 @@ class ReturnBook(models.Model):
     bookBroken = models.IntegerField(verbose_name='是否破坏')
     bookTimeout = models.IntegerField(verbose_name='是否超时')
 
+    class Meta:
+        verbose_name = '还书表'
+        verbose_name_plural = verbose_name
+
+    def __unicode__(self):
+        return self.returnBookId
 
 
+class LackBook(models.Model):
+    LackUser = models.ForeignKey(User, related_name='userReturn', verbose_name='缺书者', on_delete=models.CASCADE)
+    LackBook = models.ForeignKey(Book, related_name='bookIdReturn', verbose_name='书籍名字', on_delete=models.CASCADE)
+    LackData = models.DateField(auto_now_add=True, verbose_name='缺书登记时间')
+
+    class Meta:
+        verbose_name = '缺书表'
+        verbose_name_plural = verbose_name
+
+    def __unicode__(self):
+        return self.LackBook
 
 
 

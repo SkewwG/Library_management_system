@@ -23,8 +23,9 @@ def regist(req):
             #获得表单数据
             username = uf.cleaned_data['username']
             password = uf.cleaned_data['password']
+            borrowedNum = 10
             #添加到数据库
-            User.objects.create(username= username,password=password)
+            User.objects.create(username= username,password=password, borrowedNum=borrowedNum)
             return HttpResponseRedirect('/login/')
     else:
         uf = UserForm()
@@ -61,9 +62,10 @@ def login(req):
 #登陆成功
 def index(req):
     username = req.COOKIES.get('username','')
-
+    book_obejct = Book.objects.all()
     ctx = {}
     ctx['username'] = username
+    ctx['book_obejct'] = book_obejct
 
     return render(req, 'index.html', ctx)
 
@@ -76,34 +78,56 @@ def logout(req):
 
 # personInfo    个人信息
 def personInfo(req):
-    username = req.COOKIES.get('username','')
-    userObejct = User.objects.get(username=username)
-    readerName = userObejct.readerName
-    telphone = userObejct.telphone
-    email = userObejct.email
+    username = req.COOKIES.get('username', '')
     ctx = {}
-    ctx['username'] = username
-    ctx['readerName'] = readerName
-    ctx['telphone'] = telphone
-    ctx['email'] = email
+    if req.method == 'POST':
+        readerName = req.POST['readerName']
+        telphone = req.POST['telphone']
+        email = req.POST['email']
+        User.objects.filter(username=username).update(readerName=readerName, telphone=telphone, email=email)
+        HttpResponseRedirect('/../personInfo')
+    else:
+        userObejct = User.objects.get(username=username)
+        readerId = userObejct.id
+        readerName = userObejct.readerName
+        telphone = userObejct.telphone
+        email = userObejct.email
+        ctx['readerId'] = readerId
+        ctx['username'] = username
+        ctx['readerName'] = readerName
+        ctx['telphone'] = telphone
+        ctx['email'] = email
 
     return render(req, 'personInfo.html', ctx)
-
-# bookInfo    图书信息
-def bookInfo(req):
-    username = req.COOKIES.get('username','')
-
-    ctx = {}
-    ctx['username'] = username
-
-    return render(req, 'bookInfo.html', ctx)
 
 # borrowBook    借书
 def borrowBook(req):
     username = req.COOKIES.get('username','')
-
     ctx = {}
     ctx['username'] = username
+
+    # borrowBook提交表单
+    if req.method == 'POST':
+        try:
+            L = list(req.POST.items())
+            print(L)
+
+        except Exception as e:
+            pass
+        #
+        # if req.POST['searchBookName']:
+        #     print('1111111111111111')
+        #     searchBookName = req.POST['searchBookName']
+        #     try:
+        #         search_object = Book.objects.get(bookName=searchBookName)
+        #         ctx['search_object'] = search_object
+        #     except Exception as e:
+        #         ctx['error'] = '未查到书籍'
+
+
+    else:
+        pass
+
 
     return render(req, 'borrowBook.html', ctx)
 
