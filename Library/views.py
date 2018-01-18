@@ -23,9 +23,10 @@ def regist(req):
             #获得表单数据
             username = uf.cleaned_data['username']
             password = uf.cleaned_data['password']
-            borrowedNum = 10
+            borrowNum = 10
+            borrowedNum = 0
             #添加到数据库
-            User.objects.create(username= username,password=password, borrowedNum=borrowedNum)
+            User.objects.create(username= username,password=password, borrowNum=borrowNum, borrowedNum=borrowedNum)
             return HttpResponseRedirect('/login/')
     else:
         uf = UserForm()
@@ -90,11 +91,13 @@ def personInfo(req):
         userObejct = User.objects.get(username=username)
         readerId = userObejct.id
         readerName = userObejct.readerName
+        borrowedNum = userObejct.borrowedNum
         telphone = userObejct.telphone
         email = userObejct.email
         ctx['readerId'] = readerId
         ctx['username'] = username
         ctx['readerName'] = readerName
+        ctx['borrowedNum'] = borrowedNum
         ctx['telphone'] = telphone
         ctx['email'] = email
 
@@ -109,21 +112,64 @@ def borrowBook(req):
     # borrowBook提交表单
     if req.method == 'POST':
         try:
-            L = list(req.POST.items())
-            print(L)
+            req_dict = req.POST     # req_dict是页面提交的参数
+            button_value = req_dict['button']           # 1是搜索框，2是索书，3是还书，4是缺书
+            print('button_value : {}'.format(button_value))
+            # 搜索框
+            if button_value == '1':
+                searchBookName = req.POST['searchBookName']
+                try:
+                    search_object = Book.objects.get(bookName=searchBookName)
+                    ctx['search_object'] = search_object
+                except Exception as e:
+                    ctx['error'] = '未查到书籍'
+
+            # 索书
+            elif button_value == '2':
+                readerId = req_dict['readerId']
+                bookId = req_dict['bookId']
+                reader_object = User.objects.get(id=readerId)       # 通过readerId获取外键User对象
+                book_object = Book.objects.get(bookId=bookId)
+
+                # 对借书表进行修改
+                borrowbook = BorrowBook(borrowUser=reader_object, borrowBookId=book_object)
+                borrowbook.save()       # 创建一条记录
+
+                # 对读者表进行修改
+                reader_object.borrowedNum += 1  # 读者借书+1
+                reader_object.save()            # 保存
+
+                # 对book表进行修改
+                book_object.bookSurplus -= 1        # 剩余书籍-1
+                book_object.isBorrow -= 1           # 可借-1
+                book_object.save()
+
+            # 预订书籍
+            elif button_value == '3':
+                readerId = req_dict['readerId']
+                bookName = req_dict['bookName']
+
+                reader_object = User.objects.get(id=readerId)  # 通过readerId获取外键User对象
+
+                # 对预订书表进行修改
+                borrowbook = subscribeBook(subscribeUser=reader_object, subscribeBookName=bookName)
+                borrowbook.save()  # 创建一条记录
+
+            # 缺书登记
+            elif button_value == '4':
+                readerId = req_dict['readerId']
+                bookName = req_dict['bookName']
+
+                reader_object = User.objects.get(id=readerId)  # 通过readerId获取外键User对象
+
+                # 对预订书表进行修改
+                borrowbook = LackBook(LackUser=reader_object, LackBook=bookName)
+                borrowbook.save()  # 创建一条记录
+
+
 
         except Exception as e:
-            pass
-        #
-        # if req.POST['searchBookName']:
-        #     print('1111111111111111')
-        #     searchBookName = req.POST['searchBookName']
-        #     try:
-        #         search_object = Book.objects.get(bookName=searchBookName)
-        #         ctx['search_object'] = search_object
-        #     except Exception as e:
-        #         ctx['error'] = '未查到书籍'
-
+            print(e)
 
     else:
         pass
@@ -133,144 +179,46 @@ def borrowBook(req):
 
 # returnBook    还书
 def returnBook(req):
-    username = req.COOKIES.get('username','')
-
+    username = req.COOKIES.get('username', '')
+    book_obejct = Book.objects.all()
     ctx = {}
     ctx['username'] = username
+    ctx['book_obejct'] = book_obejct
+
+    if req.POST:
+        try:
+            req_dict = req.POST  # req_dict是页面提交的参数
+            button_value = req_dict['button']  # 1是搜索  2是归还
+            print('button_value : {}'.format(button_value))
+
+            if button_value == '0':
+                searchBookId = req.POST['searchBookId']
+                search_borrowBook_obejct = BorrowBook.objects.get(borrowBookId=int(searchBookId))  # 获取借书表的对象
+                borrowData = search_borrowBook_obejct.borrowData
+                ctx['borrowData'] = borrowData
+
+                search_book_obejct = Book.objects.get(bookId=int(searchBookId))     # 获取书的对象
+                ctx['search_book_obejct'] = search_book_obejct
+
+            else:                               # 点击了归还按钮
+                returnBookId = int(req.POST['button'])
+                search_book_obejct = Book.objects.get(bookId=returnBookId)  # 获取书的对象
+                search_borrowBook_obejct = BorrowBook.objects.get(borrowBookId=returnBookId)  # 获取借书表的对象
+                search_borrowBook_obejct.delete()       # 删除借书表该行数据
+
+                # book表的剩余量、可借都加1
+                search_book_obejct.bookSurplus += 1
+                search_book_obejct.isBorrow += 1
+                search_book_obejct.save()
+
+                # 读者表已借书本减1
+                user_object = User.objects.get(username=username)
+                user_object.borrowedNum -= 1
+                user_object.save()
+
+                # 初始化
+                ctx = {}
+        except Exception as e:
+            print(e)
 
     return render(req, 'returnBook.html', ctx)
-
-
-
-
-# 搜索
-def search(req):
-    req.encoding = 'utf-8'
-
-    username = req.COOKIES.get('username', '')
-    down_num = User.objects.get(username=username).down_num
-    had_down_num = User.objects.get(username=username).had_down_num
-    jurisdiction = User.objects.get(username=username).jurisdiction
-    if jurisdiction == 'wotu':
-        jurisdiction_name = '我图网'
-    elif jurisdiction == 'csdn':
-        jurisdiction_name = 'CSDN'
-
-
-    ctx = {'username': username,
-           'down_num': down_num,
-           'had_down_num': had_down_num,
-           'jurisdiction_name': jurisdiction_name
-           }
-    #cookies = {'Cookie': cookie}
-    if 'q' in req.POST:
-        if judge_num(down_num, had_down_num):
-            message = '你搜索的内容为: ' + req.POST['q']
-            url1 = req.POST['q']
-            down_url, imgs_url = down(url1, jurisdiction)
-            if down_url:
-                had_down_num_add(username)
-            had_down_num = User.objects.get(username=username).had_down_num
-            ctx['had_down_num'] = had_down_num
-            ctx['down_url'] = down_url
-            ctx['imgs_url'] = imgs_url
-            ctx['message'] = message
-        else:
-            ctx['message'] = '次数用完，请充值'
-    else:
-        ctx['message'] = '请输入下载内容'
-    return render(req, 'search.html', ctx)
-
-def judge_num(down_num, had_down_num):
-    if down_num > had_down_num :
-        return True
-    else:
-        return False
-
-# 下载
-def down(url1, jurisdiction):
-    if jurisdiction == 'wotu':
-        cookies = wotuCookies.objects.all() # 获取所有的cookies
-        cookie = random.choice(cookies)     # 随机取一个cookie
-        down_url = wotu_down(url1, str(cookie))
-        imgs_url = get_img(url1, cookie)
-        return down_url, imgs_url
-    elif jurisdiction == 'csdn':
-        vips = csdnVIP.objects.all()         # 获取所有的vip账号
-        vip = random.choice(vips)            # 从中选择一个vip账号
-
-        v_user = vip.username
-        v_pwd = vip.password
-        #print(v_user, v_pwd)
-        login_url = "https://passport.csdn.net/account/login"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36",
-        }
-        # 设置session
-        csdn_session = requests.Session()
-
-        # 获取登录页面的源代码内的lt & execution
-        login_text = csdn_session.get(url=login_url, headers=headers).text
-        lt_execution = re.findall('name="lt" value="(.*?)".*\sname="execution" value="(.*?)"', login_text, re.S)
-
-        # 提交的数据
-        data = {"username": v_user,
-                "password": v_pwd,
-                "lt": lt_execution[0][0],
-                "execution": lt_execution[0][1],
-                "_eventId": "submit"}
-
-        # 利用session登录csdn
-        csdn_session.post(url=login_url, data=data, headers=headers)
-
-        down_id = url1.split('/')[-1]
-        down_url = 'http://download.csdn.net/index.php/vip_download/download_client/{}'.format(down_id)
-        res = csdn_session.get(down_url)
-        #down_url = 'http://dl.download.csdn.net/down11/20180107/3783e8f88939ec23f36d730e6c52b54c.rar?response-content-disposition=attachment%3Bfilename%3D%22%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BA%20mybatis%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86%E4%B8%8E%E5%AE%9E%E8%B7%B5.rar%22&OSSAccessKeyId=9q6nvzoJGowBj4q1&Expires=1515405863&Signature=ST%2Be64YvGL%2BOhXgn24SkLmSFb1o%3D&user=wj20180110&sourceid=10192431&sourcescore=8&isvip=1&wj20180110&10192431'
-        down_url = res.url
-        print(down_url)
-        imgs_url = []
-        return down_url, imgs_url
-
-# 我图网获取下载链接
-def wotu_down(url_1, cookie):
-    #cookie = '''user_uutoken=6dc8n%2BHJfNK4SLJz3rFXpIjagwhbI%2BuRbLyeFZuAHeDx%2FeuphT0tax97E1GvhFbDq1hFgYnKV%2FYA8o0ZlScNb1yIMjZXmbVs; returnurl=http%3A%2F%2Fwww.ooopic.com%2Fpic_27057964.html; Hm_lvt_6260fe7b21d72d3521d999c79fe01fc7=1514872102; Hm_lpvt_6260fe7b21d72d3521d999c79fe01fc7=1514889191; Hm_lvt_5b1cb8ea5bd686369a321f1c5e6408b6=1514872102; Hm_lpvt_5b1cb8ea5bd686369a321f1c5e6408b6=1514889191; reg_login_from=vip_top; lastUsername=qq196212736; td_cookie=18446744071472005120; hukelink=100; showqrcode20171123=1; userid=865382; username=qq196212736; nickname=qq196212736; ooo_auth=b6a3I2hw%2BQXuiO63trsZqwNWzwjEiPdNbxJs5wIhxN5PQPjWwrgcythvRSnRc4rep114enFBQ64d53JOF0AcDN9wnG%2B6sXJ8yMkP2H2DaBSvHUuCyZcvPtZFnFFsPMEs1QoOedX4Uo9ndVd2qdP4; ooo_nicaia=c203DYbeEAqVWkmV1ivdmZqdO67fRKjfp%2BwqKxI9ehZvBUs32222XJSnIJDgIVuB1q1kp4WNTyK2gzEwyl6sl%2BIbbBm%2FFnTcM%2Bc3M1aZM%2Blgv4y54OM2mtMFA7eQlbVZl6MH'''
-    cookies = {'Cookie': cookie}
-    headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",
-    }
-    res_1 = requests.get(url=url_1, headers=headers, cookies=cookies)
-    ret_1 = res_1.text
-    cmp_1 = r'<a target="_blank" href="(.*)" c'
-
-    # http://downloads.ooopic.com/down_newfreevip.php?id=27233883
-    url_2 = re.findall(cmp_1, ret_1)[0]
-
-    res_2 = requests.get(url=url_2, headers=headers, cookies=cookies)
-    ret_2 = res_2.text
-    token_cmp = r'<input type="hidden" id="token" name="token" value="(.*)">'
-    picid_cmp = r'<input type="hidden" id="picid" name="picid" value="(.*)">'
-    token = re.findall(token_cmp, ret_2)[0]
-    picid = re.findall(picid_cmp, ret_2)[0]
-
-    down_url = 'http://downloads.ooopic.com/down_newfreevip.php?action=down&id={}&token={}'.format(picid, token)
-    return down_url
-
-# 我图网获取下载图片
-def get_img(url_1, cookie):
-    cookies = {'Cookie': cookie}
-    headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0",
-    }
-
-    text = requests.get(url=url_1, headers=headers).content.decode('gb2312')
-    cmp = r'<img src="(.*)"  width="730'
-    imgs_url = re.findall(cmp, text)
-    return imgs_url
-
-# 已下载次数+1
-def had_down_num_add(username):
-    user = User.objects.get(username=username)
-    user.had_down_num += 1
-    user.save()
-

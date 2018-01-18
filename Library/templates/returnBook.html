@@ -9,7 +9,7 @@
     <meta name="author" content="">
 
     <link rel="stylesheet" type="text/css" href="../static/lib/bootstrap/css/bootstrap.css">
-    
+
     <link rel="stylesheet" type="text/css" href="../static/stylesheets/theme.css">
     <link rel="stylesheet" href="../static/lib/font-awesome/css/font-awesome.css">
 
@@ -94,154 +94,106 @@
 {#        </ul>#}
     </div>
 
-    
+
+
     <div class="content">
-        
+
         <div class="header">
-            
-            <h1 class="page-title">Users</h1>
+
+            <h1 class="page-title">还书</h1>
         </div>
-        
+
                 <ul class="breadcrumb">
-            <li><a href="index.html">Home</a> <span class="divider">/</span></li>
-            <li class="active">Users</li>
+            <li><a href="../index">主页</a> <span class="divider">/</span></li>
+            <li class="active">还书</li>
         </ul>
 
         <div class="container-fluid">
             <div class="row-fluid">
-                    
-<div class="btn-toolbar">
-    <button class="btn btn-primary"><i class="icon-plus"></i> New User</button>
-    <button class="btn">Import</button>
-    <button class="btn">Export</button>
-  <div class="btn-group">
-  </div>
-</div>
-<div class="well">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Username</th>
-          <th style="width: 26px;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1</td>
-          <td>Mark</td>
-          <td>Tompson</td>
-          <td>the_mark7</td>
-          <td>
-              <a href="personInfo.html"><i class="icon-pencil"></i></a>
-              <a href="#myModal" role="button" data-toggle="modal"><i class="icon-remove"></i></a>
-          </td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>Ashley</td>
-          <td>Jacobs</td>
-          <td>ash11927</td>
-          <td>
-              <a href="personInfo.html"><i class="icon-pencil"></i></a>
-              <a href="#myModal" role="button" data-toggle="modal"><i class="icon-remove"></i></a>
-          </td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td>Audrey</td>
-          <td>Ann</td>
-          <td>audann84</td>
-          <td>
-              <a href="personInfo.html"><i class="icon-pencil"></i></a>
-              <a href="#myModal" role="button" data-toggle="modal"><i class="icon-remove"></i></a>
-          </td>
-        </tr>
-        <tr>
-          <td>4</td>
-          <td>John</td>
-          <td>Robinson</td>
-          <td>jr5527</td>
-          <td>
-              <a href="personInfo.html"><i class="icon-pencil"></i></a>
-              <a href="#myModal" role="button" data-toggle="modal"><i class="icon-remove"></i></a>
-          </td>
-        </tr>
-        <tr>
-          <td>5</td>
-          <td>Aaron</td>
-          <td>Butler</td>
-          <td>aaron_butler</td>
-          <td>
-              <a href="personInfo.html"><i class="icon-pencil"></i></a>
-              <a href="#myModal" role="button" data-toggle="modal"><i class="icon-remove"></i></a>
-          </td>
-        </tr>
-        <tr>
-          <td>6</td>
-          <td>Chris</td>
-          <td>Albert</td>
-          <td>cab79</td>
-          <td>
-              <a href="personInfo.html"><i class="icon-pencil"></i></a>
-              <a href="#myModal" role="button" data-toggle="modal"><i class="icon-remove"></i></a>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-</div>
-<div class="pagination">
-    <ul>
-        <li><a href="#">Prev</a></li>
-        <li><a href="#">1</a></li>
-        <li><a href="#">2</a></li>
-        <li><a href="#">3</a></li>
-        <li><a href="#">4</a></li>
-        <li><a href="#">Next</a></li>
-    </ul>
-</div>
 
-<div class="modal small hide fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="myModalLabel">Delete Confirmation</h3>
-    </div>
-    <div class="modal-body">
-        <p class="error-text"><i class="icon-warning-sign modal-icon"></i>Are you sure you want to delete the user?</p>
-    </div>
-    <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button class="btn btn-danger" data-dismiss="modal">Delete</button>
-    </div>
+<div class="faq-content">
+    <div class="row-fluid">
+        <div>
+            <div class="search-well">
+                <form class="form-inline" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input class="input-xlarge" placeholder="输入所借书的编号" id="appendedInputButton" type="text" name="searchBookId">
+                    <button class="btn" type="submit" name="button" value="0"><i class="icon-search"></i> Go</button>
+                </form>
+
+            </div>
+
+            <div class="block">
+                <p class="block-heading">搜索结果</p>
+                <div class="block-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>书号</th>
+                        <th>书名</th>
+                        <th>作者</th>
+                        <th>借书时间</th>
+                        <th>归还</th>
+{#                        <th>出版社</th>#}
+{#                        <th>出版时间</th>#}
+{#                        <th>入库时间</th>#}
+{#                        <th>书籍总数</th>#}
+{#                        <th>剩余书籍数量</th>#}
+{#                        <th>可借</th>#}
+{#                        <th>缺书</th>#}
+{#                        <th>新书</th>#}
+                    </tr>
+              </thead>
+                    {% if error %}
+                        <font color="red" style="font-size: 20px">{{ error }}</font>
+                    {% else %}
+                        <tr>
+                        <td>{{ search_book_obejct.bookId }}</td>
+                        <td>{{ search_book_obejct.bookName }}</td>
+                        <td>{{ search_book_obejct.author }}</td>
+                        <td>{{ borrowData }}</td>
+                        <td>
+                            <form id="tab" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <button class="btn" type="submit" name="button" value="{{ search_book_obejct.bookId }}">归还</button>
+                            </form>
+                        </td>
+{#                        <td>{{ search_object.bookPublishDate }}</td>#}
+{#                        <td>{{ search_object.bookStorage }}</td>#}
+{#                        <td>{{ search_object.bookNums }}</td>#}
+{#                        <td>{{ search_object.bookSurplus }}</td>#}
+{#                        <td>{{ search_object.isBorrow }}</td>#}
+{#                        <td>{{ search_object.isLack }}</td>#}
+{#                        <td>{{ search_object.isNew }}</td>#}
+                    </tr>
+                    {% endif %}
+                </table>
+                </div>
+            </div>
+
+        </div>
+
+</div>
 </div>
 
 
-                    
-                    <footer>
-                        <hr>
 
-                        
-                        <p class="pull-right">Collect from <a href="http://www.cssmoban.com/" title="网页模板" target="_blank">网页模板</a></p>
 
-                        <p>&copy; 2012 <a href="#" target="_blank">Portnine</a></p>
-                    </footer>
-                    
+
             </div>
         </div>
     </div>
-    
 
 
-    <script src="lib/bootstrap/js/bootstrap.js"></script>
+
+    <script src="../static/lib/bootstrap/js/bootstrap.js"></script>
     <script type="text/javascript">
         $("[rel=tooltip]").tooltip();
         $(function() {
             $('.demo-cancel-click').click(function(){return false;});
         });
     </script>
-    
+
   </body>
 </html>
 
